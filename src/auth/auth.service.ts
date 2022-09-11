@@ -82,11 +82,9 @@ export class AuthService {
 
   
   async validateToken(token: string) {
-    try{
-      return this.jwtService.verify(token);
-    }catch(e){
-      throw new HttpException(e, HttpStatus.UNAUTHORIZED)
-    }
+    const data = this.jwtService.verify(token);
+    // new HttpException(e, HttpStatus.UNAUTHORIZED)
+    return data;
   };
 
 }

@@ -1,6 +1,7 @@
 import { BelongsToMany, HasMany, HasOne, Model } from "sequelize-typescript";
 import { Column, DataType, Table } from "sequelize-typescript";
 import { Token } from "src/auth/token.model";
+import { UserTags } from "src/tags/dto/user-tags.model";
 import { Tag } from "src/tags/tags.model";
 
 interface IUser {
@@ -29,4 +30,7 @@ export class User extends Model<User, IUser> {
 
   @HasOne(() => Token)
   tokens: Token;
+
+  @BelongsToMany(() => Tag, () => UserTags)
+  tags: Tag
 }

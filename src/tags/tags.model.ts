@@ -1,5 +1,6 @@
 import { BelongsToMany, Model, Column, DataType, Table, ForeignKey, BelongsTo } from "sequelize-typescript";
 import { User } from "src/users/users.model";
+import { UserTags } from "./dto/user-tags.model";
 
 interface ITag {
   creatorUuid: string,
@@ -25,4 +26,7 @@ export class Tag extends Model<Tag, ITag> {
 
   @BelongsTo(() => User)
   creator: User;
+
+  @BelongsToMany(() => User, () => UserTags)
+  users: User
 }

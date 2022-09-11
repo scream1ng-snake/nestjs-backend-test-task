@@ -5,12 +5,13 @@ import { AuthModule } from 'src/auth/auth.module';
 import { Tag } from 'src/tags/tags.model';
 import { User } from './users.model';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { UserTags } from 'src/tags/dto/user-tags.model';
 
 @Module({
   providers: [UsersService],
   controllers: [UsersController],
   imports: [
-    SequelizeModule.forFeature([User, Tag]),
+    SequelizeModule.forFeature([User, Tag, UserTags]),
     forwardRef(() => AuthModule),
   ],
   exports: [UsersService]

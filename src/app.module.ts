@@ -6,6 +6,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from './users/users.model';
 import { Tag } from './tags/tags.model';
 import { Token } from './auth/token.model';
+import { UserTags } from './tags/dto/user-tags.model';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { Token } from './auth/token.model';
       username: 'postgres',
       password: "root",
       database: "test-task",
-      models: [User, Tag, Token],
+      models: [User, Tag, Token, UserTags],
       autoLoadModels: true
     })
   ],

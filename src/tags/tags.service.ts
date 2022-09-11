@@ -11,10 +11,9 @@ import { Tag } from './tags.model';
 export class TagsService {
   constructor(@InjectModel(Tag) private tagRepository: typeof Tag, @Inject(forwardRef(() => UsersService)) private userService: UsersService) { }
 
-  async createTag(token: string, dto: CreateTagDto) {
+  async createTag(uuid: string, dto: CreateTagDto) {
     try {
-      const user = await this.userService.getUserByToken(token);
-      return await this.tagRepository.create({ ...dto, creatorUuid: user.uuid })
+      return await this.tagRepository.create({ ...dto, creatorUuid: uuid })
     } catch (e) {
       return new HttpException(e.message, HttpStatus.BAD_REQUEST)
     }
@@ -55,7 +54,8 @@ export class TagsService {
     if (sortOrder && name) {
       return await this.tagRepository.findAndCountAll({
         where: { sortOrder, name },
-        attributes: ["id", "name", "price", "image"],
+        include: { model: User, as: "creator", attributes: ["nickname", "uuid"] },
+        attributes: ["id", "name", "sortOrder"],
         ...Paginate(page, limit)
       })
     }
