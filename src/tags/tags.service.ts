@@ -1,22 +1,26 @@
 import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Sequelize } from 'sequelize-typescript';
 import { User } from 'src/users/users.model';
 import { UsersService } from 'src/users/users.service';
+import { Paginate } from 'src/utils/paginate';
 import { CreateTagDto } from './dto/createTag.dto';
 import { FindByParamsDto } from './dto/findByParams.dto';
 import { UpdateTagDto } from './dto/updateTag.dto';
+import { UserTags } from './dto/user-tags.model';
 import { Tag } from './tags.model';
 
 @Injectable()
 export class TagsService {
-  constructor(@InjectModel(Tag) private tagRepository: typeof Tag, @Inject(forwardRef(() => UsersService)) private userService: UsersService) { }
+  constructor(
+    @InjectModel(Tag) private tagRepository: typeof Tag, 
+    @InjectModel(UserTags) private userTags: typeof UserTags, 
+    @Inject(forwardRef(() => UsersService)) private userService: UsersService,
+    private sequelize: Sequelize
+  ) {}
 
-  async createTag(uuid: string, dto: CreateTagDto) {
-    try {
-      return await this.tagRepository.create({ ...dto, creatorUuid: uuid })
-    } catch (e) {
-      return new HttpException(e.message, HttpStatus.BAD_REQUEST)
-    }
+  async createTag(creatorUuid: string, dto: CreateTagDto) {
+    return await this.tagRepository.create({ ...dto, creatorUuid})
   }
 
   async getTagById(id: number) {
@@ -87,14 +91,38 @@ export class TagsService {
     }
     return new HttpException("Нет доступа", HttpStatus.FORBIDDEN)
   }
+
+
+  async getCreatedTags(uuid: string) {
+    return await this.tagRepository.findAndCountAll({ where: { creatorUuid: uuid }, attributes: ["id", "name", "sortOrder"] })
+  }
+
+  async getUserTags(uuid: string) {
+    return await this.userTags.findAndCountAll({ where: { uuid }, attributes: [], include: { model: Tag, as: "tags", attributes: ["id", "name", "sortOrder"] } })
+  }
+
+  async addManyTags(uuid: string, tags: number[]) {
+    let id: number
+    try {
+      await this.sequelize.transaction(async t => {
+        const transactionHost = { transaction: t };
+        const user = await this.userService.getUsersByUuid(uuid);
+        for (let i = 0; i < tags.length; i++) {
+          id = tags[i];
+          const tag = await this.tagRepository.findOne({ where: { id } })
+          await user.$add("tags", tag.id, transactionHost)
+        }
+        return this.getUserTags(uuid)
+      });
+    } catch (err) {
+      return new HttpException(`Тега с id ${id} не существует`, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+
+  async deleteTags(uuid: string, tagId: number) {
+    await this.userTags.destroy({ where: { uuid, tagId } })
+  }
 }
 
-export function Paginate(page: number = 1, length: number = 10) {
-  if (page <= 0 || length <= 0) {
-    throw new HttpException("Неверные параметры пагинации", HttpStatus.BAD_REQUEST)
-  }
-  return {
-    length,
-    offset: page * length - length
-  }
-}
+

@@ -8,7 +8,6 @@ import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { UserTags } from 'src/tags/dto/user-tags.model';
-import { Sequelize } from 'sequelize-typescript';
 
 @Injectable()
 export class UsersService {
@@ -17,7 +16,7 @@ export class UsersService {
     @Inject(forwardRef(() => AuthService)) private authService: AuthService,
     @InjectModel(Tag) private tagRepository: typeof Tag,
     @InjectModel(UserTags) private userTags: typeof UserTags,
-    private sequelize: Sequelize
+    
   ) { }
 
   async createUser(dto: CreateUserDto) {
@@ -75,36 +74,5 @@ export class UsersService {
     const user = await this.getUserByToken(token);
     this.authService.logout(token)
     user.destroy()
-  }
-
-  async getCreatedTags(uuid: string) {
-    return await this.tagRepository.findAndCountAll({ where: { creatorUuid: uuid }, attributes: ["id", "name", "sortOrder"] })
-  }
-
-  async getUserTags(uuid: string) {
-    return await this.userTags.findAndCountAll({ where: { uuid }, attributes: [], include: { model: Tag, as: "tags", attributes: ["id", "name", "sortOrder"] } })
-  }
-
-  async addManyTags(uuid: string, tags: number[]) {
-    let id: number
-    try {
-      await this.sequelize.transaction(async t => {
-        const transactionHost = { transaction: t };
-        const user = await this.getUsersByUuid(uuid);
-        for (let i = 0; i < tags.length; i++) {
-          id = tags[i];
-          const tag = await this.tagRepository.findOne({ where: { id } })
-          await user.$add("tags", tag.id, transactionHost)
-        }
-        return this.getUserTags(uuid)
-      });
-    } catch (err) {
-      return new HttpException(`Тега с id ${id} не существует`, HttpStatus.BAD_REQUEST)
-    }
-  }
-
-
-  async deleteTags(uuid: string, tagId: number) {
-    await this.userTags.destroy({ where: { uuid, tagId } })
   }
 }
