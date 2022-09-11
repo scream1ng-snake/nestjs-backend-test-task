@@ -1,4 +1,4 @@
-import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { CreateUserDto } from 'src/auth/dto/createUser.dto';
 import { Token } from 'src/auth/token.model';
@@ -7,15 +7,12 @@ import { User } from './users.model';
 import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { AuthService } from 'src/auth/auth.service';
-import { UserTags } from 'src/tags/dto/user-tags.model';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User) private userRipository: typeof User,
     @Inject(forwardRef(() => AuthService)) private authService: AuthService,
-    @InjectModel(Tag) private tagRepository: typeof Tag,
-    @InjectModel(UserTags) private userTags: typeof UserTags,
     
   ) { }
 

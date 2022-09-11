@@ -6,16 +6,16 @@ import { UsersModule } from 'src/users/users.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Token } from './token.model';
 import { User } from 'src/users/users.model';
-import { TagsModule } from 'src/tags/tags.module';
+import { JWT_EXPIRES_IN, JWT_SECRET_KEY } from 'src/consts/consts';
 
 @Module({
   providers: [AuthService],
   controllers: [AuthController],
   imports: [
     JwtModule.register({
-      secret: 'SECRET',
+      secret: JWT_SECRET_KEY,
       signOptions: {
-        expiresIn: '30m'
+        expiresIn: JWT_EXPIRES_IN
       },
     }),
     forwardRef(() => UsersModule),

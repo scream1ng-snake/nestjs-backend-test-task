@@ -1,15 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { CORS_METHODS, CORS_ORIGIN, PORT } from './consts/consts';
 import { ValidationPipe } from './pipes/validation.pipe';
 
 async function bootstrap() {
-  const PORT = 5000
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe())
   app.enableCors({
-    "origin": "*",
-    "methods": "GET,PUT,POST,DELETE",
+    "origin": CORS_ORIGIN,
+    "methods": CORS_METHODS,
     "preflightContinue": false,
     "optionsSuccessStatus": 200
   });
