@@ -1,8 +1,9 @@
 import { createParamDecorator, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 
-export const Token = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
+export const Cookies = createParamDecorator(
+  (data: string, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest()
-    return request.user.token;
+
+    return data ? request.cookies?.[data] : request.cookies;
   }
 );

@@ -24,16 +24,16 @@ export class AuthService {
     };
     const hashPassword = await bcrypt.hash(dto.password, 3);
     const user = await this.userService.createUser({...dto, password: hashPassword});
-    const token = this.generateToken(user);
-    await this.saveToken(user.uuid, token);
-    return {token}
+    const tokens = this.generateToken(user);
+    await this.saveToken(user.uuid, tokens.refreshToken);
+    return tokens
   }
 
   async login(dto: loginDto) {
     const user = await this.validateUser(dto);
-    const token = this.generateToken(user);
-    await this.saveToken(user.uuid, token);
-    return {token};
+    const tokens = this.generateToken(user);
+    await this.saveToken(user.uuid, tokens.refreshToken);
+    return tokens;
   }
 
   private generateToken(user: User) {
@@ -41,7 +41,10 @@ export class AuthService {
       email: user.email, 
       uuid: user.uuid,
     }
-    return this.jwtService.sign(payload);
+    return {
+      accessTokem: this.jwtService.sign(payload),
+      refreshToken: this.jwtService.sign(payload, {expiresIn: "15d"})
+    };
   }
 
   private async validateUser(dto: loginDto) {
@@ -55,19 +58,18 @@ export class AuthService {
     throw new HttpException("Внутренняя ошибка сервера" ,HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  async logout(token: string) {
-    await this.tokenRepository.destroy({where: {token}})
+  async logout(uuid: string) {
+    return await this.tokenRepository.destroy({where: {uuid}})
   }
 
   async refresh(token: string) {
-    if (!token) {throw new HttpException("Не авторизован", HttpStatus.UNAUTHORIZED)};
     const user = await this.validateToken(token);
     const userData = await this.userService.getUsersByEmail(user.email);
     const tokenData = await this.tokenRepository.findOne({where: {token}});
     if(!userData || !tokenData) {throw new HttpException("Не авторизован", HttpStatus.UNAUTHORIZED)};
-    token = this.generateToken(userData);
-    await this.saveToken(userData.uuid, token);
-    return {token};
+    const { refreshToken } = this.generateToken(userData); // <-
+    await this.saveToken(userData.uuid, refreshToken);
+    return {refreshToken};
   }
 
   private async saveToken(uuid: string, token: string) {
@@ -82,9 +84,8 @@ export class AuthService {
 
   
   async validateToken(token: string) {
+    if(!token) throw new HttpException("Не авторизован", HttpStatus.UNAUTHORIZED)
     const data = this.jwtService.verify(token);
-    // new HttpException(e, HttpStatus.UNAUTHORIZED)
     return data;
   };
-
 }

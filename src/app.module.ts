@@ -7,20 +7,21 @@ import { User } from './users/users.model';
 import { Tag } from './tags/tags.model';
 import { Token } from './auth/token.model';
 import { UserTags } from './tags/dto/user-tags.model';
-import { POSTGRES_DB, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER } from './consts/consts';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     UsersModule, 
     TagsModule, 
     AuthModule,
+    ConfigModule.forRoot({envFilePath: ".env"}),
     SequelizeModule.forRoot({
       dialect: 'postgres',
-      host: POSTGRES_HOST,
-      port: POSTGRES_PORT,
-      username: POSTGRES_USER,
-      password: POSTGRES_PASSWORD,
-      database: POSTGRES_DB,
+      host: process.env.POSTGRES_HOST,
+      port: Number(process.env.POSTGRES_PORT),
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
       models: [User, Tag, Token, UserTags],
       autoLoadModels: true
     })

@@ -15,12 +15,11 @@ npm install
 ## Перед тем как запустить  
 
 В проекте я использовал Postgres.  
-Важно, чтобы у вас был установлен postgres сервер, comand line tools либо pg_admin.  
 Создайте базу данных "test_task" через командную строку, либо через pg_admin.  
 ```bash
 CREATE DATABASE test-task
 ```  
-Затем сконифгурируйте файл ```consts.ts``` в src/consts/consts.ts  
+Затем сконфгурируйте файл ```consts.ts``` в src/consts/consts.ts  
 ```js
 // Порт, на котором будет запущено приложение
 export const PORT = 5000;

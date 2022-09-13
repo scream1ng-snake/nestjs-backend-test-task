@@ -1,8 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { CreateUserDto } from 'src/auth/dto/createUser.dto';
-import { Token } from 'src/auth/token.model';
-import { Tag } from 'src/tags/tags.model';
 import { User } from './users.model';
 import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from './dto/updateUser.dto';
@@ -13,8 +11,7 @@ export class UsersService {
   constructor(
     @InjectModel(User) private userRipository: typeof User,
     @Inject(forwardRef(() => AuthService)) private authService: AuthService,
-    
-  ) { }
+  ) {}
 
   async createUser(dto: CreateUserDto) {
     const user = await this.userRipository.create(dto);
@@ -40,24 +37,6 @@ export class UsersService {
     return await this.userRipository.findOne({ where: { uuid } });
   }
 
-  async getUserByToken(token: string) {
-    return await this.userRipository.findOne({
-      include: [
-        {
-          model: Token,
-          as: "tokens",
-          where: { token },
-          attributes: []
-        },
-        {
-          model: Tag,
-          as: "createdTag"
-        }
-      ],
-      attributes: ["uuid", "email", "nickname"]
-    })
-  }
-
   async updateUser(dto: UpdateUserDto, uuid: string) {
     const user = await this.getUsersByUuid(uuid);
     for (let prop in dto) {
@@ -67,9 +46,9 @@ export class UsersService {
     return user.save()
   }
 
-  async deleteUser(token: string) {
-    const user = await this.getUserByToken(token);
-    this.authService.logout(token)
+  async deleteUser(uuid: string) {
+    const user = await this.getUsersByUuid(uuid);
+    this.authService.logout(uuid)
     user.destroy()
   }
 }

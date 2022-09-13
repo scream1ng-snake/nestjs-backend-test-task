@@ -65,11 +65,11 @@ export class TagsService {
     }
   }
 
-  async put(dto: UpdateTagDto, token: string, id: number) {
+  async put(dto: UpdateTagDto, uuid: string, id: number) {
     try {
       const tag = await this.getTagById(id);
       if (!tag) return new HttpException("Тэга не существует", HttpStatus.BAD_REQUEST)
-      const user = await this.userService.getUserByToken(token);
+      const user = await this.userService.getUsersByUuid(uuid);
       if (user.nickname === tag.creator.nickname) {
         for (let prop in dto) {
           tag[prop] = dto[prop];
@@ -82,10 +82,10 @@ export class TagsService {
     }
   }
 
-  async delete(token: string, id: number) {
+  async deleteCreatedTag(uuid: string, id: number) {
     const tag = await this.getTagById(id);
     if (!tag) return new HttpException("Тэга не существует", HttpStatus.BAD_REQUEST)
-    const user = await this.userService.getUserByToken(token);
+    const user = await this.userService.getUsersByUuid(uuid);
     if (user.nickname === tag.creator.nickname) {
       return await tag.destroy()
     }
@@ -104,6 +104,7 @@ export class TagsService {
   async addManyTags(uuid: string, tags: number[]) {
     let id: number
     try {
+
       await this.sequelize.transaction(async t => {
         const transactionHost = { transaction: t };
         const user = await this.userService.getUsersByUuid(uuid);
@@ -113,6 +114,7 @@ export class TagsService {
           await user.$add("tags", tag.id, transactionHost)
         }
         return this.getUserTags(uuid)
+
       });
     } catch (err) {
       return new HttpException(`Тега с id ${id} не существует`, HttpStatus.BAD_REQUEST)
@@ -120,7 +122,7 @@ export class TagsService {
   }
 
 
-  async deleteTags(uuid: string, tagId: number) {
+  async deleteAddedTag(uuid: string, tagId: number) {
     await this.userTags.destroy({ where: { uuid, tagId } })
   }
 }
